@@ -1,8 +1,8 @@
-% 1a
+% Solution 1a
 clear, clc;
 
-pts3d_norm = dlmread('pts3d-norm.txt');
-pts2d_norm_pic = dlmread('pts2d-norm-pic_a.txt');
+pts3d_norm = dlmread('../../input/ps3/pts3d-norm.txt');
+pts2d_norm_pic = dlmread('../../input/ps3/pts2d-norm-pic_a.txt');
 
 A = zeros(40, 12);
 
@@ -18,16 +18,19 @@ for i = 1:20
     A(i*2, 12) = -pts2d_norm_pic(i, 2);
 end
 
-[U,S,V] = svd(A'*A);
+[~,~,V] = svd(A' * A);
 
-m = V(:, end);
-m = reshape(m, 4, 3);
-m = m';
+M = V(:, end);
+disp('M is');
+M = reshape(M, 4, 3)';
+disp(M);    % scaled equivalent to the matrix in ps3
 
-example = m * [pts3d_norm(end, :), 1]';
-example = example/example(3);
-disp(example)
-
+last_pt = M * [pts3d_norm(end, :), 1]';
+last_pt = last_pt/last_pt(3);   % go to inhomogeneous
+disp(['Projected point: ', num2str(last_pt(1:2)')]);
+% disp(['Ground truth: ', num2str(pts2d_norm_pic(end, :))]);
+disp(['Residual: ', num2str(norm(last_pt(1:2)' - pts2d_norm_pic(end, :)))]);
+%%
 % 1c
 Q = m(:, 1:3);
 C = -inv(Q)*m(:, 4);
