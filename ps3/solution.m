@@ -124,34 +124,55 @@ F = reshape(F, 3, 3)';
 format long
 disp('Estimated F:');
 disp(F);
+
 %% Solution 2b
 [U,S,V] = svd(F);
 S(3,3) = 0;
-F = U*S*V';
+F = U * S * V';
 
 disp('Estimated F of rank 2:');
 disp(F);
 format short
 
-%% 2c
-F = f;
-line = F*[43, 203, 1]';
+%% Solution 2c
+im_a = imread('../../input/ps3/pic_a.jpg');
+im_b = imread('../../input/ps3/pic_b.jpg');
 
-
-im_a=mean(imread('pic_a.jpg'), 3);
-im_b=mean(imread('pic_b.jpg'), 3);
-
+% two sides of the image
 l_L = cross([1, 1, 1], [1, size(im_a, 1), 1]);
 l_R = cross([size(im_a, 2), 1, 1], [size(im_a, 2), size(im_a, 1), 1]);
 
+figure(1);
+imshow(im_a);
+hold on;
+for i = 1 : 20
+    epi_line = F' * [pts2d_pic_b(i, 1); pts2d_pic_b(i, 2); 1];
+
+    i_L = cross(epi_line, l_L);
+    i_L = i_L/i_L(3);
+    i_R = cross(epi_line, l_R);
+    i_R = i_R/i_R(3);
+
+    line([i_L(1), i_R(1)], [i_L(2), i_R(2)], 'Color','black');
+end
+hold off;
+
+figure(2);
+imshow(im_b);
+hold on;
+for i = 1 : 20
+    epi_line = F * [pts2d_pic_a(i, 1); pts2d_pic_a(i, 2); 1];   % changed
+
+    i_L = cross(epi_line, l_L);
+    i_L = i_L/i_L(3);
+    i_R = cross(epi_line, l_R);
+    i_R = i_R/i_R(3);
+
+    line([i_L(1), i_R(1)], [i_L(2), i_R(2)], 'Color','black');
+end
+hold off;
 
 
-i_L = cross(line, l_L);
-i_L = i_L/i_L(3)
-i_R = cross(line, l_R);
-i_R = i_R/i_R(3)
-
-(i_R(2)-i_L(2))/(1072-1)*(22-1) + i_L(2) % should be 248
 
 
 
