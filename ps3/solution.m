@@ -95,9 +95,10 @@ disp('Best M:');
 disp(best_M);
 
 %% Solution 1c
-Q = m(:, 1:3);
-C = -inv(Q)*m(:, 4);
+Q = best_M(:, 1:3);
+C = -inv(Q) * best_M(:, 4);
 
+disp(['Location of the camera: ', num2str(C')]);
 %%
 
 % 1b
