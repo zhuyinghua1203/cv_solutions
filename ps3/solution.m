@@ -99,47 +99,41 @@ Q = best_M(:, 1:3);
 C = -inv(Q) * best_M(:, 4);
 
 disp(['Location of the camera: ', num2str(C')]);
-%%
 
-% 1b
-clear, clc;
+%% Solution 2a
+clear;
 
-pts3d = dlmread('pts3d.txt');
-pts2d_pic_b = dlmread('pts2d-pic_b.txt');
+pts2d_pic_a = dlmread('../../input/ps3/pts2d-pic_a.txt');
+pts2d_pic_b = dlmread('../../input/ps3/pts2d-pic_b.txt');
 
-
-%%
-
-% 2a
-clear, clc;
-
-pts2d_pic_a = dlmread('pts2d-pic_a.txt');
-pts2d_pic_b = dlmread('pts2d-pic_b.txt');
-
-F = zeros(20, 9);
+A = zeros(20, 9);
 
 for i = 1:20
     u = pts2d_pic_a(i, 1);
     v = pts2d_pic_a(i, 2);
     up = pts2d_pic_b(i, 1);
     vp = pts2d_pic_b(i, 2);
-    F(i, :) = [up*u, up*v, up, vp*u, vp*v, vp, u, v, 1];
+    A(i, :) = [up*u, up*v, up, vp*u, vp*v, vp, u, v, 1];
 end
 
-[U,S,V] = svd(F'*F);
+[~,~,V] = svd(A'*A);
 
-f = V(:, end);
-f = reshape(f, 3, 3);
-f = f';
-% disp(rank(f));
+F = V(:, end);
+F = reshape(F, 3, 3)';
 
-% 2b
-[U,S,V] = svd(f);
+format long
+disp('Estimated F:');
+disp(F);
+%% Solution 2b
+[U,S,V] = svd(F);
 S(3,3) = 0;
-f = U*S*V';
-% disp(rank(f));
+F = U*S*V';
 
-% 2c
+disp('Estimated F of rank 2:');
+disp(F);
+format short
+
+%% 2c
 F = f;
 line = F*[43, 203, 1]';
 
