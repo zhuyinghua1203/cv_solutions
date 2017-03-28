@@ -185,17 +185,18 @@ std_b = std(pts2d_pic_b);
 
 T_b = diag([1./std_b 1]) * [1 0 -mean_b(1); 0 1 -mean_b(2); 0 0 1];
 
-% pts2d_pic_a_norm = T_a(1:2, :) * cat(1, pts2d_pic_a', ones(1, 20));
-% pts2d_pic_a_norm = pts2d_pic_a_norm';
-% pts2d_pic_b_norm = T_b(1:2, :) * cat(1, pts2d_pic_b', ones(1, 20));
-% pts2d_pic_b_norm = pts2d_pic_b_norm';
+% pts2d_pic_a_norm = T_a * cat(1, pts2d_pic_a', ones(1, 20));
+% pts2d_pic_a_norm = pts2d_pic_a_norm ./ repmat(pts2d_pic_a_norm(3, :), 3, 1);
+% pts2d_pic_a_norm = pts2d_pic_a_norm(1:2, :)';
+% pts2d_pic_b_norm = T_b * cat(1, pts2d_pic_b', ones(1, 20));
+% pts2d_pic_b_norm = pts2d_pic_b_norm ./ repmat(pts2d_pic_b_norm(3, :), 3, 1);
+% pts2d_pic_b_norm = pts2d_pic_b_norm(1:2, :)';
 
-pts2d_pic_a_norm = T_a * cat(1, pts2d_pic_a', ones(1, 20));
-pts2d_pic_a_norm = pts2d_pic_a_norm ./ repmat(pts2d_pic_a_norm(3, :), 3, 1);
-pts2d_pic_a_norm = pts2d_pic_a_norm(1:2, :)';
-pts2d_pic_b_norm = T_b * cat(1, pts2d_pic_b', ones(1, 20));
-pts2d_pic_b_norm = pts2d_pic_b_norm ./ repmat(pts2d_pic_b_norm(3, :), 3, 1);
-pts2d_pic_b_norm = pts2d_pic_b_norm(1:2, :)';
+% Since T_a(3, 3) == T_b(3, 3) == 1, the above block can be simplified as:
+pts2d_pic_a_norm = T_a(1:2, :) * cat(1, pts2d_pic_a', ones(1, 20));
+pts2d_pic_a_norm = pts2d_pic_a_norm';
+pts2d_pic_b_norm = T_b(1:2, :) * cat(1, pts2d_pic_b', ones(1, 20));
+pts2d_pic_b_norm = pts2d_pic_b_norm';
 
 % calculating F is the same as 2a and 2b
 A = zeros(20, 9);
@@ -207,6 +208,8 @@ for i = 1:20
     vp = pts2d_pic_b_norm(i, 2);
     A(i, :) = [up*u, up*v, up, vp*u, vp*v, vp, u, v, 1];
 end
+
+A
 
 [~,~,V] = svd(A'*A);
 
@@ -228,36 +231,57 @@ disp(F_hat);
 format short
 
 %% Solution 2e
-F_new = T_b' * F_hat * T_a;
+% F_new = T_b' * F_hat * T_a;
+F_new = F_hat;      % T_b and T_a were manually used in many places.
 disp('New F is:');
 disp(F_new);
 
-% calculating epipolar lines is the same as 2c
+% two sides of the image
+Pt_a_ul = T_a * [1, 1, 1]';
+Pt_a_bl = T_a * [1, size(im_a, 1), 1]';
+Pt_a_ur = T_a * [size(im_a, 2), 1, 1]';
+Pt_a_br = T_a * [size(im_a, 2), size(im_a, 1), 1]';
+Ln_a_l = cross(Pt_a_ul, Pt_a_bl);
+Ln_a_r = cross(Pt_a_ur, Pt_a_br);
+
+% calculating epipolar lines is similar to 2c
 figure(3);
 imshow(im_a);
 hold on;
 for i = 1 : 20
     epi_line = F_new' * [pts2d_pic_b_norm(i, 1); pts2d_pic_b_norm(i, 2); 1];
 
-    i_L = cross(epi_line, l_L);
-    i_L = i_L/i_L(3);
-    i_R = cross(epi_line, l_R);
-    i_R = i_R/i_R(3);
+    i_L = cross(epi_line, Ln_a_l);
+    i_L = T_a \ i_L;
+    i_L = i_L / i_L(3);
+    i_R = cross(epi_line, Ln_a_r);
+    i_R = T_a \ i_R;
+    i_R = i_R / i_R(3);
 
     line([i_L(1), i_R(1)], [i_L(2), i_R(2)], 'Color','black');
 end
 hold off;
 
+% two sides of the image
+Pt_b_ul = T_b * [1, 1, 1]';
+Pt_b_bl = T_b * [1, size(im_b, 1), 1]';
+Pt_b_ur = T_b * [size(im_b, 2), 1, 1]';
+Pt_b_br = T_b * [size(im_b, 2), size(im_b, 1), 1]';
+Ln_b_l = cross(Pt_b_ul, Pt_b_bl);
+Ln_b_r = cross(Pt_b_ur, Pt_b_br);
+
 figure(4);
 imshow(im_b);
 hold on;
 for i = 1 : 20
-    epi_line = F_new * [pts2d_pic_a_norm(i, 1); pts2d_pic_a_norm(i, 2); 1];   % changed
+    epi_line = F_new * [pts2d_pic_a_norm(i, 1); pts2d_pic_a_norm(i, 2); 1];
 
-    i_L = cross(epi_line, l_L);
-    i_L = i_L/i_L(3);
-    i_R = cross(epi_line, l_R);
-    i_R = i_R/i_R(3);
+    i_L = cross(epi_line, Ln_b_l);
+    i_L = T_b \ i_L;
+    i_L = i_L / i_L(3);
+    i_R = cross(epi_line, Ln_b_r);
+    i_R = T_b \ i_R;
+    i_R = i_R / i_R(3);
 
     line([i_L(1), i_R(1)], [i_L(2), i_R(2)], 'Color','black');
 end
