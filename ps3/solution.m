@@ -230,8 +230,10 @@ format short
 
 %% Solution 2e
 F_new = T_b' * F_hat * T_a;
+format long
 disp('New F is:');
 disp(F_new);
+format short
 
 % calculating epipolar lines is similar to 2c
 figure(3);
